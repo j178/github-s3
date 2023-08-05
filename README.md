@@ -9,6 +9,6 @@ Especially useful for hosting image files, which can be used in markdown files.
 First, login to your GitHub account, and get cookie named `user_session` from GitHub web browser session.
 
 ```shell
-go install github.com/j178/github-s3/cmd@latest
+go install github.com/j178/github-s3/cmd/github-s3@latest
 github-s3 <github-user-session> <path-to-file>
 ```
