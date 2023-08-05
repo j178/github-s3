@@ -1,6 +1,6 @@
 # GitHub as a file server 
 
-Abuse GitHub web interface [attachment feature](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) to upload a file.
+Abuse GitHub web interface [attachment feature](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) to upload a file. (Currently only image and video files are supported)
 
 ## Usage
 

@@ -101,7 +101,7 @@ func (g *GitHub) preUpload(name string, size int, contentType string) (*UploadRe
 		return nil, err
 	}
 	if !resp.IsSuccess() {
-		return nil, fmt.Errorf("failed to pre-upload: %s", resp.Status())
+		return nil, fmt.Errorf("failed to pre-upload: %s\n%s", resp.Status(), resp.String())
 	}
 	return &result, nil
 }
