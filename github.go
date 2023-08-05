@@ -2,7 +2,6 @@ package github_s3
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"io"
 	"mime"
 	"net/http"
@@ -10,6 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+
+	"github.com/go-resty/resty/v2"
 )
 
 type GitHub struct {
