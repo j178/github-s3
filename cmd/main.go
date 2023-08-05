@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	githubs3 "github.com/j178/github-s3"
 	"os"
+
+	githubs3 "github.com/j178/github-s3"
 )
 
 func main() {
@@ -13,10 +14,10 @@ func main() {
 	}
 
 	gh := githubs3.NewGitHub(os.Args[1])
-	loc, err := gh.UploadImageFromPath(os.Args[2])
+	loc, err := gh.UploadFromPath(os.Args[2])
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(loc)
+	fmt.Println(loc.GithubLink)
 }

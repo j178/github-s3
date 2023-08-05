@@ -31,9 +31,11 @@ func NewGitHub(userSession string) *GitHub {
 			Value: userSession,
 		},
 	})
-	c.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
 	c.SetDebug(os.Getenv("DEBUG") == "1")
 	c.SetRedirectPolicy(resty.NoRedirectPolicy())
+	c.SetContentLength(true)
+	c.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+	c.SetHeader("Referer", "https://github.com/cli/cli/issues/7797")
 	return &GitHub{
 		c: c,
 		// repositoryId doesn't matter, use cli/cli as default
@@ -59,7 +61,7 @@ func (g *GitHub) fetchAuthenticityToken() (string, error) {
 	return matches[1], nil
 }
 
-type UploadResult struct {
+type preUploadResult struct {
 	UploadUrl                    string `json:"upload_url"`
 	UploadAuthenticityToken      string `json:"upload_authenticity_token"`
 	AssetUploadUrl               string `json:"asset_upload_url"`
@@ -77,7 +79,7 @@ type UploadResult struct {
 	SameOrigin bool              `json:"same_origin"`
 }
 
-func (g *GitHub) preUpload(name string, size int, contentType string) (*UploadResult, error) {
+func (g *GitHub) preUpload(name string, size int, contentType string) (*preUploadResult, error) {
 	if g.authenticityToken == "" {
 		token, err := g.fetchAuthenticityToken()
 		if err != nil {
@@ -86,7 +88,7 @@ func (g *GitHub) preUpload(name string, size int, contentType string) (*UploadRe
 		g.authenticityToken = token
 	}
 
-	var result UploadResult
+	var result preUploadResult
 	resp, err := g.c.R().
 		SetMultipartFormData(map[string]string{
 			"authenticity_token": g.authenticityToken,
@@ -106,38 +108,68 @@ func (g *GitHub) preUpload(name string, size int, contentType string) (*UploadRe
 	return &result, nil
 }
 
-func (g *GitHub) UploadImage(name string, size int, r io.Reader) (string, error) {
+func (g *GitHub) postUpload(result *preUploadResult) error {
+	resp, err := g.c.R().
+		SetHeader("X-Requested-With", "XMLHttpRequest").
+		SetMultipartFormData(map[string]string{"authenticity_token": result.AssetUploadAuthenticityToken}).
+		Put("https://github.com" + result.AssetUploadUrl)
+	if err != nil {
+		return err
+	}
+	if !resp.IsSuccess() {
+		return fmt.Errorf("failed to post upload: %s", resp.Status())
+	}
+	return nil
+}
+
+type UploadResult struct {
+	// The URL of the uploaded files.
+	GithubLink string
+	// If the file is an image or video, the direct AWS link to the file. (After redirected from the GitHub link)
+	// For other type of files, this field is empty.
+	AwsLink string
+}
+
+func (g *GitHub) Upload(name string, size int, r io.Reader) (UploadResult, error) {
 	contentType := mime.TypeByExtension(filepath.Ext(name))
 	result, err := g.preUpload(name, size, contentType)
 	if err != nil {
-		return "", err
+		return UploadResult{}, err
 	}
+
 	resp, err := g.c.R().
+		SetHeader("X-Requested-With", "XMLHttpRequest").
 		SetFormData(result.Form).
 		SetFileReader("file", name, r).
 		Post(result.UploadUrl)
 	if err != nil {
-		return "", err
+		return UploadResult{}, err
 	}
 	if !resp.IsSuccess() {
-		return "", fmt.Errorf("failed to upload image: %s", resp.Status())
+		return UploadResult{}, fmt.Errorf("failed to upload image: %s", resp.Status())
 	}
 	loc := resp.Header().Get("Location")
-	if loc == "" {
-		return "", fmt.Errorf("failed to upload image: location not found")
+
+	err = g.postUpload(result)
+	if err != nil {
+		return UploadResult{}, err
 	}
-	return loc, nil
+
+	return UploadResult{
+		GithubLink: result.Asset.Href,
+		AwsLink:    loc,
+	}, nil
 }
 
-func (g *GitHub) UploadImageFromPath(path string) (string, error) {
+func (g *GitHub) UploadFromPath(path string) (UploadResult, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
-		return "", err
+		return UploadResult{}, err
 	}
 	r, err := os.Open(path)
 	if err != nil {
-		return "", err
+		return UploadResult{}, err
 	}
 	defer r.Close()
-	return g.UploadImage(filepath.Base(path), int(stat.Size()), r)
+	return g.Upload(filepath.Base(path), int(stat.Size()), r)
 }
