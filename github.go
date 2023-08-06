@@ -19,7 +19,7 @@ type GitHub struct {
 	repositoryId      string
 }
 
-func NewGitHub(userSession string) *GitHub {
+func New(userSession string) *GitHub {
 	c := resty.New()
 	c.SetCookies([]*http.Cookie{
 		{

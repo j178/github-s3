@@ -13,7 +13,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	gh := githubs3.NewGitHub(os.Args[1])
+	gh := githubs3.New(os.Args[1])
 	loc, err := gh.UploadFromPath(os.Args[2])
 	if err != nil {
 		fmt.Println(err)
