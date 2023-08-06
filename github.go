@@ -125,7 +125,7 @@ func (g *GitHub) postUpload(result *preUploadResult) error {
 type UploadResult struct {
 	// The URL of the uploaded files.
 	GithubLink string
-	// If the file is an image or video, the direct AWS link to the file. (After redirected from the GitHub link)
+	// If the file is an image or video, the direct AWS link to the file (After redirected from the GitHub link).
 	// For other type of files, this field is empty.
 	AwsLink string
 }
