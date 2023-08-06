@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,14 +22,20 @@ type GitHub struct {
 
 func New(userSession string) *GitHub {
 	c := resty.New()
-	c.SetCookies([]*http.Cookie{
+	u, _ := url.Parse("https://github.com")
+	// Set cookies to jar avoid leaking to other sites
+	c.GetClient().Jar.SetCookies(u, []*http.Cookie{
 		{
-			Name:  "user_session",
-			Value: userSession,
+			Name:     "user_session",
+			Value:    userSession,
+			SameSite: http.SameSiteLaxMode,
+			Domain:   "github.com",
 		},
 		{
-			Name:  "__Host-user_session_same_site",
-			Value: userSession,
+			Name:     "__Host-user_session_same_site",
+			Value:    userSession,
+			SameSite: http.SameSiteLaxMode,
+			Domain:   "github.com",
 		},
 	})
 	c.SetDebug(os.Getenv("DEBUG") == "1")
