@@ -1,14 +1,21 @@
 # GitHub as a file server 
 
-Abuse GitHub web interface [attachment feature](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) to upload a file, and use GitHub as a file server.
+Abuse GitHub unpublicized [attachment](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) API to serve a file.
 
-Especially useful for hosting image files, which can be used in markdown files.
+Especially useful for hosting image files that can be referenced in markdown files.
 
 ## Usage
 
-First, login to your GitHub account, and get cookie named `user_session` from GitHub web browser session.
+1. Login to your GitHub account, and obtain cookie named `user_session` from GitHub web browser session.
+2. Install
+    ```shell
+    go install github.com/j178/github-s3/cmd/github-s3@latest
+    ```
+3. Run
+    ```shell
+    github-s3 <github-user-session> <path-to-file>
+    ```
 
-```shell
-go install github.com/j178/github-s3/cmd/github-s3@latest
-github-s3 <github-user-session> <path-to-file>
-```
+## Disclaimer
+
+Please note that this project relies on an unpublicized API of GitHub, and its usage may be subject to changes in GitHub's policies or API. Use it responsibly and ensure compliance with GitHub's terms of service.
