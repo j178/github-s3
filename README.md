@@ -16,6 +16,12 @@ Especially useful for hosting image files that can be referenced in markdown fil
     github-s3 <github-user-session> <path-to-file>
     ```
 
+If you don't want to obtain the cookie manually, you can use [github-s3-auto](./cmd/github-s3-auto) to automatically find the cookie from your web browser session.
+
+```shell
+go install github.com/j178/github-s3/cmd/github-s3-auto@latest
+```
+
 ## Disclaimer
 
 Please note that this project relies on an unpublicized API of GitHub, and its usage may be subject to changes in GitHub's policies or API. Use it responsibly and ensure compliance with GitHub's terms of service.
