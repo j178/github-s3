@@ -20,6 +20,8 @@ If you don't want to obtain the cookie manually, you can use [github-s3-auto](./
 
 ```shell
 go install github.com/j178/github-s3/cmd/github-s3-auto@latest
+
+github-s3-auto <path-to-file>
 ```
 
 ## Disclaimer
