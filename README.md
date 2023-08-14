@@ -24,6 +24,26 @@ go install github.com/j178/github-s3/cmd/github-s3-auto@latest
 github-s3-auto <path-to-file>
 ```
 
+### Use in GitHub Actions
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload files to GitHub
+        uses: j178/github-s3@master
+        env:
+          GITHUB_USER_SESSION: ${{ secrets.GITHUB_USER_SESSION }}
+        with:
+          files: <list-of-paths-to-file>
+      - name: Use uploaded files
+        run: |
+            # Use the uploaded files
+        with:
+         files: ${{ steps.upload.outputs.links }}
+```
+
 ## Disclaimer
 
 Please note that this project relies on an unpublicized API of GitHub, and its usage may be subject to changes in GitHub's policies or API. Use it responsibly and ensure compliance with GitHub's terms of service.

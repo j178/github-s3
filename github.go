@@ -16,11 +16,25 @@ import (
 
 type GitHub struct {
 	c                 *resty.Client
+	repo              string
+	repoId            int
 	authenticityToken string
-	repositoryId      string
 }
 
-func New(userSession string) *GitHub {
+type Option func(*GitHub)
+
+func WithRepo(repo string) Option {
+	return func(g *GitHub) {
+		g.repo = repo
+	}
+}
+
+func New(userSession string, opts ...Option) *GitHub {
+	g := &GitHub{}
+	for _, opt := range opts {
+		opt(g)
+	}
+
 	c := resty.New()
 	u, _ := url.Parse("https://github.com")
 	// Set cookies to jar avoid leaking to other sites
@@ -42,18 +56,15 @@ func New(userSession string) *GitHub {
 	c.SetRedirectPolicy(resty.NoRedirectPolicy())
 	c.SetContentLength(true)
 	c.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
-	c.SetHeader("Referer", "https://github.com/cli/cli/issues/7797")
-	return &GitHub{
-		c: c,
-		// repositoryId doesn't matter, use cli/cli as default
-		repositoryId: "212613049",
-	}
+	g.c = c
+
+	return g
 }
 
 var tokenPattern = regexp.MustCompile(`<file-attachment class="js-upload-markdown-image.*?<input type="hidden" value="([^{"]+?)" data-csrf="true"`)
 
 func (g *GitHub) fetchAuthenticityToken() (string, error) {
-	resp, err := g.c.R().Get("https://github.com/cli/cli/issues/new?assignees=&labels=bug&projects=&template=bug_report.md")
+	resp, err := g.c.R().Get(fmt.Sprintf("https://github.com/%s/issues/new", g.repo))
 	if err != nil {
 		return "", err
 	}
@@ -66,6 +77,20 @@ func (g *GitHub) fetchAuthenticityToken() (string, error) {
 		return "", fmt.Errorf("authenticity token not found")
 	}
 	return matches[1], nil
+}
+
+func (g *GitHub) getRepoId() (int, error) {
+	var result struct {
+		ID int `json:"id"`
+	}
+	resp, err := g.c.R().SetResult(&result).Get("https://api.github.com/repos/" + g.repo)
+	if err != nil {
+		return 0, err
+	}
+	if !resp.IsSuccess() {
+		return 0, fmt.Errorf("failed to get repo id: %s", resp.Status())
+	}
+	return result.ID, nil
 }
 
 type preUploadResult struct {
@@ -94,12 +119,19 @@ func (g *GitHub) preUpload(name string, size int, contentType string) (*preUploa
 		}
 		g.authenticityToken = token
 	}
+	if g.repoId == 0 {
+		repoId, err := g.getRepoId()
+		if err != nil {
+			return nil, err
+		}
+		g.repoId = repoId
+	}
 
 	var result preUploadResult
 	resp, err := g.c.R().
 		SetMultipartFormData(map[string]string{
 			"authenticity_token": g.authenticityToken,
-			"repository_id":      g.repositoryId,
+			"repository_id":      strconv.Itoa(g.repoId),
 			"name":               name,
 			"size":               strconv.Itoa(size),
 			"content_type":       contentType,

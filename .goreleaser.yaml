@@ -1,0 +1,68 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./cmd/github-s3
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s
+      - -w
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+    - goos: windows
+      format: zip
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+brews:
+  - repository:
+      owner: j178
+      name: homebrew-tap
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    homepage: https://github.com/j178/github-s3
+    description: Use GitHub as a file server.
+    license: MIT
+
+scoops:
+  - repository:
+      owner: j178
+      name: scoop-bucket
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    folder: bucket
+    homepage: https://github.com/j178/github-s3
+    description: Use GitHub as a file server.
+    license: MIT
+
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj

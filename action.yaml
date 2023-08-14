@@ -1,0 +1,34 @@
+name: github-s3
+description: Uploads a file to GitHub using attachments API
+inputs:
+  repo:
+    description: 'The repository to upload to, defaults to the current repository'
+    required: false
+    default: ${{ github.repository }}
+  session:
+    description: 'The GitHub user session cookie'
+    required: true
+  files:
+    description: 'The files to upload'
+    required: true
+outputs:
+  links:
+    description: 'The links to the uploaded files'
+    value: ${{ steps.upload.outputs.links }}
+runs:
+  using: composite
+  steps:
+    - name: Install github-s3
+      shell: bash
+      run: |
+        curl -sSL --output /tmp/github-s3.tar.gz https://github.com/j178/github-s3/releases/latest/download/github-s3_Linux_x86_64.tar.gz && \
+        tar -xvf /tmp/github-s3.tar.gz -C /tmp && \
+        chmod +x /tmp/github-s3
+    - name: Upload
+      id: upload
+      shell: bash
+      run: |
+        links=$(/tmp/github-s3 upload -repo ${{ inputs.repo }} ${{ inputs.files }})
+        echo "links=$links" >> $GITHUB_OUTPUT
+      env:
+        GITHUB_SESSION: ${{ inputs.session }}

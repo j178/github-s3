@@ -1,22 +1,24 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
 	githubs3 "github.com/j178/github-s3"
 	"github.com/j178/kooky"
-
-	_ "github.com/j178/kooky/browser/chrome"
-	_ "github.com/j178/kooky/browser/edge"
-	_ "github.com/j178/kooky/browser/firefox"
-	_ "github.com/j178/kooky/browser/safari"
 )
+
+var repo = flag.String("repo", "", "github repo name")
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: github-s3-auto <file-path>")
+		fmt.Println("Usage: github-s3 <file-path>")
 		os.Exit(1)
+	}
+	flag.Parse()
+	if *repo == "" {
+		*repo = "cli/cli"
 	}
 
 	cookies := kooky.ReadCookies(kooky.Domain("github.com"), kooky.Name("user_session"))
@@ -25,11 +27,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	gh := githubs3.New(cookies[0].Value)
-	loc, err := gh.UploadFromPath(os.Args[1])
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	gh := githubs3.New(cookies[0].Value, githubs3.WithRepo(*repo))
+
+	for _, path := range os.Args[1:] {
+		res, err := gh.UploadFromPath(path)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(res.GithubLink)
 	}
-	fmt.Println(loc.GithubLink)
 }
