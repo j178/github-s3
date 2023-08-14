@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload files to GitHub
-        uses: j178/github-s3@master
+        uses: j178/github-s3@v1
         with:
           files: <list-of-paths-to-file>
           github-session: ${{ secrets.GH_SESSION }}
