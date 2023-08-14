@@ -16,21 +16,18 @@ func main() {
 		os.Exit(1)
 	}
 	flag.Parse()
-	if *repo == "" {
-		*repo = "cli/cli"
-	}
 
 	session := os.Getenv("GITHUB_SESSION")
 	if session == "" {
 		fmt.Println("GITHUB_SESSION env var is required")
 		os.Exit(1)
 	}
-	gh := githubs3.New(session, githubs3.WithRepo(*repo))
+	gh := githubs3.New(session, *repo)
 
 	for _, path := range os.Args[1:] {
 		res, err := gh.UploadFromPath(path)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Error: " + err.Error())
 		}
 		fmt.Println(res.GithubLink)
 	}

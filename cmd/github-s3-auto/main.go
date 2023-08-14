@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	githubs3 "github.com/j178/github-s3"
 	"github.com/j178/kooky"
+
+	githubs3 "github.com/j178/github-s3"
 )
 
 var repo = flag.String("repo", "", "github repo name")
@@ -17,9 +18,6 @@ func main() {
 		os.Exit(1)
 	}
 	flag.Parse()
-	if *repo == "" {
-		*repo = "cli/cli"
-	}
 
 	cookies := kooky.ReadCookies(kooky.Domain("github.com"), kooky.Name("user_session"))
 	if len(cookies) == 0 {
@@ -27,12 +25,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	gh := githubs3.New(cookies[0].Value, githubs3.WithRepo(*repo))
+	gh := githubs3.New(cookies[0].Value, *repo)
 
 	for _, path := range os.Args[1:] {
 		res, err := gh.UploadFromPath(path)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Error: " + err.Error())
 		}
 		fmt.Println(res.GithubLink)
 	}

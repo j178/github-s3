@@ -21,18 +21,11 @@ type GitHub struct {
 	authenticityToken string
 }
 
-type Option func(*GitHub)
-
-func WithRepo(repo string) Option {
-	return func(g *GitHub) {
-		g.repo = repo
-	}
-}
-
-func New(userSession string, opts ...Option) *GitHub {
+func New(userSession string, repo string) *GitHub {
 	g := &GitHub{}
-	for _, opt := range opts {
-		opt(g)
+	if repo == "" {
+		g.repo = "cli/cli"
+		g.repoId = 212613049
 	}
 
 	c := resty.New()
