@@ -1,0 +1,16 @@
+name: Test action.yaml
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This is a test log" > test.log
+      - uses: j178/github-s3@master
+        id: upload
+        with:
+          session: ${{ secrets.GITHUB_SESSION }}
+          files: |
+            test.log
+      - run: echo ${{ steps.upload.outputs.links }}
+        shell: bash
