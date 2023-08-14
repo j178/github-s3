@@ -5,12 +5,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "This is a test log" > test.log
+      - run: |
+          echo "This is a test log" > test.log
+          echo "This is a test log" > test2.log
       - uses: j178/github-s3@master
         id: upload
         with:
           github-session: ${{ secrets.GH_SESSION }}
-          files: |
+          files: >-
             test.log
+            test2.log
       - run: echo ${{ steps.upload.outputs.links }}
         shell: bash
