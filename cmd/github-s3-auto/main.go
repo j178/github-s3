@@ -27,7 +27,7 @@ func main() {
 
 	gh := githubs3.New(cookies[0].Value, *repo)
 
-	for _, path := range os.Args[1:] {
+	for _, path := range flag.Args() {
 		res, err := gh.UploadFromPath(path)
 		if err != nil {
 			fmt.Println("Error: " + err.Error())

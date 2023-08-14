@@ -6,14 +6,15 @@ Especially useful for hosting image files that can be referenced in markdown fil
 
 ## Usage
 
-1. Login to your GitHub account, and obtain cookie named `user_session` from GitHub web browser session.
-2. Install
+1. Install
     ```shell
     go install github.com/j178/github-s3/cmd/github-s3@latest
     ```
+2. Login to your GitHub account, and obtain cookie named `user_session` from GitHub web browser session.
 3. Run
     ```shell
-    github-s3 <github-user-session> <path-to-file>
+    export GITHUB_SESSION=<github-user-session>   
+    github-s3 <path-to-file>
     ```
 
 If you don't want to obtain the cookie manually, you can use [github-s3-auto](./cmd/github-s3-auto) to automatically find the cookie from your web browser session.
@@ -34,7 +35,7 @@ jobs:
       - name: Upload files to GitHub
         uses: j178/github-s3@master
         env:
-          GITHUB_USER_SESSION: ${{ secrets.GITHUB_USER_SESSION }}
+          GITHUB_SESSION: ${{ secrets.GITHUB_SESSION }}
         with:
           files: <list-of-paths-to-file>
       - name: Use uploaded files

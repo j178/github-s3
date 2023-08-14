@@ -26,6 +26,8 @@ func New(userSession string, repo string) *GitHub {
 	if repo == "" {
 		g.repo = "cli/cli"
 		g.repoId = 212613049
+	} else {
+		g.repo = repo
 	}
 
 	c := resty.New()
