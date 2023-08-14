@@ -165,7 +165,13 @@ type UploadResult struct {
 }
 
 func (g *GitHub) Upload(name string, size int, r io.Reader) (UploadResult, error) {
-	contentType := mime.TypeByExtension(filepath.Ext(name))
+	ext := filepath.Ext(name)
+	contentType := ""
+	if ext == ".log" {
+		contentType = "text/x-log"
+	} else {
+		contentType = mime.TypeByExtension(ext)
+	}
 	result, err := g.preUpload(name, size, contentType)
 	if err != nil {
 		return UploadResult{}, err
