@@ -9,7 +9,7 @@ jobs:
       - uses: j178/github-s3@master
         id: upload
         with:
-          session: ${{ secrets.GITHUB_SESSION }}
+          github-session: ${{ secrets.GH_SESSION }}
           files: |
             test.log
       - run: echo ${{ steps.upload.outputs.links }}

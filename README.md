@@ -36,10 +36,9 @@ jobs:
     steps:
       - name: Upload files to GitHub
         uses: j178/github-s3@master
-        env:
-          GITHUB_SESSION: ${{ secrets.GITHUB_SESSION }}
         with:
           files: <list-of-paths-to-file>
+          github-session: ${{ secrets.GH_SESSION }}
       - name: Use uploaded files
         run: |
             # Use the uploaded files

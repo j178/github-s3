@@ -5,7 +5,7 @@ inputs:
     description: 'The repository to upload to, defaults to the current repository'
     required: false
     default: ${{ github.repository }}
-  session:
+  github-session:
     description: 'The GitHub user session cookie'
     required: true
   files:
@@ -31,4 +31,4 @@ runs:
         links=$(/tmp/github-s3 upload -repo ${{ inputs.repo }} ${{ inputs.files }})
         echo "links=$links" >> $GITHUB_OUTPUT
       env:
-        GITHUB_SESSION: ${{ inputs.session }}
+        GITHUB_SESSION: ${{ inputs.github-session }}
