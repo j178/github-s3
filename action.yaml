@@ -28,7 +28,7 @@ runs:
       id: upload
       shell: bash
       run: |
-        links=$(/tmp/github-s3 upload -repo ${{ inputs.repo }} ${{ inputs.files }})
+        links=$(/tmp/github-s3 -repo ${{ inputs.repo }} ${{ inputs.files }})
         echo "links=$links" >> $GITHUB_OUTPUT
       env:
         GITHUB_SESSION: ${{ inputs.github-session }}
