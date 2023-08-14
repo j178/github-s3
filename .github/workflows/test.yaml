@@ -15,5 +15,6 @@ jobs:
           files: >-
             test.log
             test2.log
-      - run: echo ${{ steps.upload.outputs.links }}
+      - name: Print links
+        run: echo ${{ steps.upload.outputs.links }}
         shell: bash

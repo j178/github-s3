@@ -29,6 +29,10 @@ runs:
       shell: bash
       run: |
         links=$(/tmp/github-s3 -repo ${{ inputs.repo }} ${{ inputs.files }})
-        echo "links=$links" >> $GITHUB_OUTPUT
+        {
+          echo 'links<<EOF'
+          echo $links
+          echo EOF
+        } >> $GITHUB_OUTPUT
       env:
         GITHUB_SESSION: ${{ inputs.github-session }}
