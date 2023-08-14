@@ -8,6 +8,8 @@ Especially useful for hosting image files that can be referenced in markdown fil
 
 1. Install
     ```shell
+    brew install j178/tap/github-s3
+    # or
     go install github.com/j178/github-s3/cmd/github-s3@latest
     ```
 2. Login to your GitHub account, and obtain cookie named `user_session` from GitHub web browser session.

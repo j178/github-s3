@@ -30,7 +30,8 @@ func main() {
 	for _, path := range flag.Args() {
 		res, err := gh.UploadFromPath(path)
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			fmt.Fprintln(os.Stderr, "Error: "+err.Error())
+			os.Exit(1)
 		}
 		fmt.Println(res.GithubLink)
 	}
