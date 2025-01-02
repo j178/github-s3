@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go mod tidy
@@ -45,6 +46,7 @@ brews:
   - repository:
       owner: j178
       name: homebrew-tap
+    directory: Formula
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
@@ -59,7 +61,7 @@ scoops:
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    folder: bucket
+    directory: bucket
     homepage: https://github.com/j178/github-s3
     description: Use GitHub as a file server.
     license: MIT
