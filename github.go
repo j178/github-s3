@@ -14,10 +14,9 @@ import (
 )
 
 type GitHub struct {
-	c                 *resty.Client
-	repo              string
-	repoId            int
-	authenticityToken string
+	c      *resty.Client
+	repo   string
+	repoId int
 }
 
 func New(userSession string, repo string) *GitHub {
