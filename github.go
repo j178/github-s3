@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
@@ -50,28 +49,11 @@ func New(userSession string, repo string) *GitHub {
 	c.SetDebug(os.Getenv("DEBUG") == "1")
 	c.SetRedirectPolicy(resty.NoRedirectPolicy())
 	c.SetContentLength(true)
-	c.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+	c.SetHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+	c.SetHeader("X-Requested-With", "XMLHttpRequest")
 	g.c = c
 
 	return g
-}
-
-var tokenPattern = regexp.MustCompile(`<file-attachment class="js-upload-markdown-image.*?<input type="hidden" value="([^{"]+?)" data-csrf="true"`)
-
-func (g *GitHub) fetchAuthenticityToken() (string, error) {
-	resp, err := g.c.R().Get(fmt.Sprintf("https://github.com/%s/issues/new", g.repo))
-	if err != nil {
-		return "", err
-	}
-	if !resp.IsSuccess() {
-		return "", fmt.Errorf("failed to fetch authenticity token: %s", resp.Status())
-	}
-	body := resp.String()
-	matches := tokenPattern.FindStringSubmatch(body)
-	if len(matches) != 2 {
-		return "", fmt.Errorf("authenticity token not found")
-	}
-	return matches[1], nil
 }
 
 func (g *GitHub) getRepoId() (int, error) {
@@ -88,7 +70,7 @@ func (g *GitHub) getRepoId() (int, error) {
 	return result.ID, nil
 }
 
-type preUploadResult struct {
+type uploadPolicy struct {
 	UploadUrl                    string `json:"upload_url"`
 	UploadAuthenticityToken      string `json:"upload_authenticity_token"`
 	AssetUploadUrl               string `json:"asset_upload_url"`
@@ -106,14 +88,7 @@ type preUploadResult struct {
 	SameOrigin bool              `json:"same_origin"`
 }
 
-func (g *GitHub) preUpload(name string, size int, contentType string) (*preUploadResult, error) {
-	if g.authenticityToken == "" {
-		token, err := g.fetchAuthenticityToken()
-		if err != nil {
-			return nil, err
-		}
-		g.authenticityToken = token
-	}
+func (g *GitHub) getPolicy(name string, size int, contentType string) (*uploadPolicy, error) {
 	if g.repoId == 0 {
 		repoId, err := g.getRepoId()
 		if err != nil {
@@ -122,36 +97,36 @@ func (g *GitHub) preUpload(name string, size int, contentType string) (*preUploa
 		g.repoId = repoId
 	}
 
-	var result preUploadResult
+	var result uploadPolicy
 	resp, err := g.c.R().
 		SetMultipartFormData(map[string]string{
-			"authenticity_token": g.authenticityToken,
-			"repository_id":      strconv.Itoa(g.repoId),
-			"name":               name,
-			"size":               strconv.Itoa(size),
-			"content_type":       contentType,
+			"repository_id": strconv.Itoa(g.repoId),
+			"name":          name,
+			"size":          strconv.Itoa(size),
+			"content_type":  contentType,
 		}).
+		SetHeader("Github-Verified-Fetch", "true").
+		SetHeader("Origin", "https://github.com").
 		SetResult(&result).
 		Post("https://github.com/upload/policies/assets")
 	if err != nil {
 		return nil, err
 	}
 	if !resp.IsSuccess() {
-		return nil, fmt.Errorf("failed to pre-upload: %s\n%s", resp.Status(), resp.String())
+		return nil, fmt.Errorf("failed to get policy: %s\n%s", resp.Status(), resp.String())
 	}
 	return &result, nil
 }
 
-func (g *GitHub) postUpload(result *preUploadResult) error {
+func (g *GitHub) markUploadComplete(result *uploadPolicy) error {
 	resp, err := g.c.R().
-		SetHeader("X-Requested-With", "XMLHttpRequest").
 		SetMultipartFormData(map[string]string{"authenticity_token": result.AssetUploadAuthenticityToken}).
 		Put("https://github.com" + result.AssetUploadUrl)
 	if err != nil {
 		return err
 	}
 	if !resp.IsSuccess() {
-		return fmt.Errorf("failed to post upload: %s", resp.Status())
+		return fmt.Errorf("failed to mark upload complete: %s", resp.Status())
 	}
 	return nil
 }
@@ -172,16 +147,15 @@ func (g *GitHub) Upload(name string, size int, r io.Reader) (UploadResult, error
 	} else {
 		contentType = mime.TypeByExtension(ext)
 	}
-	result, err := g.preUpload(name, size, contentType)
+	policy, err := g.getPolicy(name, size, contentType)
 	if err != nil {
 		return UploadResult{}, err
 	}
 
 	resp, err := g.c.R().
-		SetHeader("X-Requested-With", "XMLHttpRequest").
-		SetFormData(result.Form).
+		SetFormData(policy.Form).
 		SetFileReader("file", name, r).
-		Post(result.UploadUrl)
+		Post(policy.UploadUrl)
 	if err != nil {
 		return UploadResult{}, err
 	}
@@ -190,13 +164,13 @@ func (g *GitHub) Upload(name string, size int, r io.Reader) (UploadResult, error
 	}
 	loc := resp.Header().Get("Location")
 
-	err = g.postUpload(result)
+	err = g.markUploadComplete(policy)
 	if err != nil {
 		return UploadResult{}, err
 	}
 
 	return UploadResult{
-		GithubLink: result.Asset.Href,
+		GithubLink: policy.Asset.Href,
 		AwsLink:    loc,
 	}, nil
 }
