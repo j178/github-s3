@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/j178/kooky"
 
+	_ "github.com/j178/kooky/browser/chrome"
+
 	githubs3 "github.com/j178/github-s3"
 )
 
