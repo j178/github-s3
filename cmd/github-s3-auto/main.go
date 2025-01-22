@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/j178/kooky"
 
 	_ "github.com/j178/kooky/browser/chrome"
@@ -10,12 +12,21 @@ import (
 
 func main() {
 	githubs3.Run(
-		func() string {
-			cookies := kooky.ReadCookies(kooky.Domain("github.com"), kooky.Name("user_session"))
-			if len(cookies) == 0 {
-				return ""
+		func() (githubs3.Credential, error) {
+			cookies := kooky.ReadCookies(kooky.Domain("github.com"), kooky.Name("user_session"), kooky.Name("_device_id"))
+			if len(cookies) < 2 {
+				return githubs3.Credential{}, fmt.Errorf("user_session and _device_id cookies not found")
 			}
-			return cookies[0].Value
+			cred := githubs3.Credential{}
+			for _, c := range cookies {
+				switch c.Name {
+				case "user_session":
+					cred.UserSession = c.Value
+				case "_device_id":
+					cred.DeviceID = c.Value
+				}
+			}
+			return cred, nil
 		},
 	)
 }

@@ -8,6 +8,9 @@ inputs:
   github-session:
     description: 'The GitHub user session cookie'
     required: true
+  github-device-id:
+    description: 'The GitHub user device id'
+    required: true
   files:
     description: 'The files to upload'
     required: true
@@ -36,3 +39,4 @@ runs:
         } >> $GITHUB_OUTPUT
       env:
         GITHUB_SESSION: ${{ inputs.github-session }}
+        GITHUB_DEVICE_ID: ${{ inputs.github-device-id }}

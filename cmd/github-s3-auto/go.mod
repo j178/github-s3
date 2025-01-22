@@ -1,6 +1,6 @@
 module github.com/j178/github-s3/cmd/github-s3-auto
 
-go 1.23
+go 1.23.4
 
 require (
 	github.com/j178/github-s3 v1.0.1

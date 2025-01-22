@@ -19,7 +19,12 @@ type GitHub struct {
 	repoId int
 }
 
-func New(userSession string, repo string) *GitHub {
+type Credential struct {
+	UserSession string
+	DeviceID    string
+}
+
+func New(cred Credential, repo string) *GitHub {
 	g := &GitHub{}
 	if repo == "" {
 		g.repo = "cli/cli"
@@ -34,13 +39,19 @@ func New(userSession string, repo string) *GitHub {
 	c.GetClient().Jar.SetCookies(u, []*http.Cookie{
 		{
 			Name:     "user_session",
-			Value:    userSession,
+			Value:    cred.UserSession,
 			SameSite: http.SameSiteLaxMode,
 			Domain:   "github.com",
 		},
 		{
 			Name:     "__Host-user_session_same_site",
-			Value:    userSession,
+			Value:    cred.UserSession,
+			SameSite: http.SameSiteLaxMode,
+			Domain:   "github.com",
+		},
+		{
+			Name:     "_device_id",
+			Value:    cred.DeviceID,
 			SameSite: http.SameSiteLaxMode,
 			Domain:   "github.com",
 		},
