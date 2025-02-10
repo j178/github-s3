@@ -3,7 +3,7 @@ module github.com/j178/github-s3/cmd/github-s3-auto
 go 1.23.4
 
 require (
-	github.com/j178/github-s3 v1.0.1
+	github.com/j178/github-s3 v1.0.2
 	github.com/j178/kooky v0.0.0-20241229062455-9bf54ed73002
 )
 
